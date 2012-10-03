@@ -1,0 +1,7 @@
+target/*.o
+*.so
+tmp
+*.tmp
+*.orig
+*.rej
+*.new
