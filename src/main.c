@@ -46,6 +46,7 @@ static int hf_remoting_msgid = -1;
 static int hf_remoting_msg_flags = -1;
 static int hf_remoting_msg_flag_new = -1;
 static int hf_remoting_msg_flag_eof = -1;
+static int hf_remoting_msg_flag_cancel = -1;
 static int hf_remoting_msg_window = -1;
 
 static gint ett_remoting = -1;
@@ -69,6 +70,7 @@ static void dissect_remoting_msg(tvbuff_t *tvb, packet_info *pinfo, proto_tree *
 					proto_tree_add_item(remoting_tree, hf_remoting_msg_flags, tvb, 11, 1, ENC_BIG_ENDIAN);
 					proto_tree_add_item(remoting_tree, hf_remoting_msg_flag_new, tvb, 11, 1, ENC_BIG_ENDIAN);
 					proto_tree_add_item(remoting_tree, hf_remoting_msg_flag_eof, tvb, 11, 1, ENC_BIG_ENDIAN);
+					proto_tree_add_item(remoting_tree, hf_remoting_msg_flag_cancel, tvb, 11, 1, ENC_BIG_ENDIAN);
 				} else if (pkt_type == 0x31) {
 					proto_tree_add_item(remoting_tree, hf_remoting_msg_window, tvb, 11, 4, ENC_BIG_ENDIAN);
 				}
@@ -93,6 +95,7 @@ void plugin_register(void) {
 		{ &hf_remoting_chanid,     { "Remoting Channel ID", "remoting.chanid", FT_UINT32, BASE_HEX, 0,                    0x0, 0, HFILL }},
 		{ &hf_remoting_msgid,      { "Remoting Message ID", "remoting.msgid",  FT_UINT16, BASE_HEX, 0,                    0x0, 0, HFILL }},
 		{ &hf_remoting_msg_flags,  { "Remoting Message Flags", "remoting.msgflags", FT_UINT8, BASE_HEX, 0,                0x0, 0, HFILL }},
+		{ &hf_remoting_msg_flag_eof, { "Cancelled",   "remoting.msgflags.cancel", FT_BOOLEAN, 8,    0,                    0x4, 0, HFILL }},
 		{ &hf_remoting_msg_flag_new, { "New Message", "remoting.msgflags.new",    FT_BOOLEAN, 8,    0,                    0x2, 0, HFILL }},
 		{ &hf_remoting_msg_flag_eof, { "End of Message", "remoting.msgflags.eom", FT_BOOLEAN, 8,    0,                    0x1, 0, HFILL }},
 		{ &hf_remoting_msg_window, { "Remoting Window Adjustment", "remoting.msgwindow", FT_UINT32, BASE_DEC, 0,          0x0, 0, HFILL }},
