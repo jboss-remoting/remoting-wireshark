@@ -1,4 +1,3 @@
-
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -95,7 +94,7 @@ void plugin_register(void) {
 		{ &hf_remoting_chanid,     { "Remoting Channel ID", "remoting.chanid", FT_UINT32, BASE_HEX, 0,                    0x0, 0, HFILL }},
 		{ &hf_remoting_msgid,      { "Remoting Message ID", "remoting.msgid",  FT_UINT16, BASE_HEX, 0,                    0x0, 0, HFILL }},
 		{ &hf_remoting_msg_flags,  { "Remoting Message Flags", "remoting.msgflags", FT_UINT8, BASE_HEX, 0,                0x0, 0, HFILL }},
-		{ &hf_remoting_msg_flag_eof, { "Cancelled",   "remoting.msgflags.cancel", FT_BOOLEAN, 8,    0,                    0x4, 0, HFILL }},
+		{ &hf_remoting_msg_flag_cancel, { "Cancelled",   "remoting.msgflags.cancel", FT_BOOLEAN, 8,    0,                    0x4, 0, HFILL }},
 		{ &hf_remoting_msg_flag_new, { "New Message", "remoting.msgflags.new",    FT_BOOLEAN, 8,    0,                    0x2, 0, HFILL }},
 		{ &hf_remoting_msg_flag_eof, { "End of Message", "remoting.msgflags.eom", FT_BOOLEAN, 8,    0,                    0x1, 0, HFILL }},
 		{ &hf_remoting_msg_window, { "Remoting Window Adjustment", "remoting.msgwindow", FT_UINT32, BASE_DEC, 0,          0x0, 0, HFILL }},
