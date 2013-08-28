@@ -213,8 +213,8 @@ static void dissect_remoting_msg(tvbuff_t *tvb, packet_info *pinfo, proto_tree *
 				proto_tree_add_item(remoting_tree, hf_remoting_msgid, tvb, 9, 2, ENC_BIG_ENDIAN);
 				if (pkt_type == 0x30) {
 					proto_tree_add_item(remoting_tree, hf_remoting_msg_flags, tvb, 11, 1, ENC_BIG_ENDIAN);
-					proto_tree_add_item(remoting_tree, hf_remoting_msg_flag_new, tvb, 11, 1, ENC_BIG_ENDIAN);
 					proto_tree_add_item(remoting_tree, hf_remoting_msg_flag_eof, tvb, 11, 1, ENC_BIG_ENDIAN);
+					proto_tree_add_item(remoting_tree, hf_remoting_msg_flag_new, tvb, 11, 1, ENC_BIG_ENDIAN);
 					proto_tree_add_item(remoting_tree, hf_remoting_msg_flag_cancel, tvb, 11, 1, ENC_BIG_ENDIAN);
 				} else if (pkt_type == 0x31) {
 					proto_tree_add_item(remoting_tree, hf_remoting_msg_window, tvb, 11, 4, ENC_BIG_ENDIAN);
@@ -277,7 +277,7 @@ void plugin_register(void) {
 	// protocol subtree
 	static gint *ett[] = { &ett_remoting, &ett_svcparam, &ett_svcparam_unk, &ett_grt, &ett_grt_unk, &ett_cap, &ett_cap_unk };
 
-	proto_remoting = proto_register_protocol("JBoss Remoting", "Remoting", "rem");
+	proto_remoting = proto_register_protocol("JBoss Remoting", "Remoting", "remoting");
 	proto_register_field_array(proto_remoting, hf, array_length(hf));
 	proto_register_subtree_array(ett, array_length(ett));
 }
