@@ -76,6 +76,9 @@ static int hf_remoting_cap_chan_out = -1;
 static int hf_remoting_cap_unk = -1;
 static int hf_remoting_cap_unk_cont = -1;
 
+static int hf_remoting_content = -1;
+static int hf_remoting_content_data = -1;
+
 static gint ett_remoting = -1;
 static gint ett_svcparam = -1;
 static gint ett_svcparam_unk = -1;
@@ -83,6 +86,7 @@ static gint ett_grt = -1;
 static gint ett_grt_unk = -1;
 static gint ett_cap = -1;
 static gint ett_cap_unk = -1;
+static gint ett_remoting_content = -1;
 
 static void dissect_remoting_msg(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree) {
     col_set_str(pinfo->cinfo, COL_PROTOCOL, "Remoting");
@@ -169,7 +173,10 @@ static void dissect_remoting_msg(tvbuff_t *tvb, packet_info *pinfo, proto_tree *
                 }
                 p += plen;
             }
-            
+        } else if (pkt_type >= 0x02 && pkt_type <= 0x05) {
+            proto_item *cont_item = proto_tree_add_item(remoting_tree, hf_remoting_content, tvb, 1, tvb_length(tvb) - 1, ENC_BIG_ENDIAN);
+            proto_tree *cont_tree = proto_item_add_subtree(cont_item, ett_remoting_content);
+            proto_tree_add_item(cont_tree, hf_remoting_content_data, tvb, 1, tvb_length(tvb) - 1, ENC_BIG_ENDIAN);
         } else if (pkt_type >= 0x10 && pkt_type <= 0x3F) {
             proto_tree_add_item(remoting_tree, hf_remoting_chanid, tvb, 5, 4, ENC_BIG_ENDIAN);
             if (pkt_type == 0x10 || pkt_type == 0x11) {
@@ -226,6 +233,9 @@ static void dissect_remoting_msg(tvbuff_t *tvb, packet_info *pinfo, proto_tree *
                     proto_tree_add_item(remoting_tree, hf_remoting_msg_flag_eof, tvb, 11, 1, ENC_BIG_ENDIAN);
                     proto_tree_add_item(remoting_tree, hf_remoting_msg_flag_new, tvb, 11, 1, ENC_BIG_ENDIAN);
                     proto_tree_add_item(remoting_tree, hf_remoting_msg_flag_cancel, tvb, 11, 1, ENC_BIG_ENDIAN);
+                    proto_item *cont_item = proto_tree_add_item(remoting_tree, hf_remoting_content, tvb, 1, tvb_length(tvb) - 1, ENC_BIG_ENDIAN);
+                    proto_tree *cont_tree = proto_item_add_subtree(cont_item, ett_remoting_content);
+                    proto_tree_add_item(cont_tree, hf_remoting_content_data, tvb, 1, tvb_length(tvb) - 1, ENC_BIG_ENDIAN);
                 } else if (pkt_type == 0x31) {
                     proto_tree_add_item(remoting_tree, hf_remoting_msg_window, tvb, 11, 4, ENC_BIG_ENDIAN);
                 }
@@ -284,9 +294,12 @@ void plugin_register(void) {
         { &hf_remoting_cap_chan_out,      { "Outbound Channel Limit",      "remoting.cap.chanout",  FT_UINT16, BASE_HEX_DEC, 0, 0x0, 0, HFILL }},
         { &hf_remoting_cap_unk,           { "Unknown",                     "remoting.cap.unk",      FT_UINT8,  BASE_HEX,     0, 0x0, 0, HFILL }},
         { &hf_remoting_cap_unk_cont,      { "Content",                     "remoting.cap.unk.cont", FT_BYTES,  BASE_NONE,    0, 0x0, 0, HFILL }},
+
+        { &hf_remoting_content,      { "Content", "remoting.cont",      FT_NONE,  0,         0, 0x0, 0, HFILL }},
+        { &hf_remoting_content_data, { "Data",    "remoting.cont.data", FT_BYTES, BASE_NONE, 0, 0x0, 0, HFILL }},
     };
     // protocol subtree
-    static gint *ett[] = { &ett_remoting, &ett_svcparam, &ett_svcparam_unk, &ett_grt, &ett_grt_unk, &ett_cap, &ett_cap_unk };
+    static gint *ett[] = { &ett_remoting, &ett_svcparam, &ett_svcparam_unk, &ett_grt, &ett_grt_unk, &ett_cap, &ett_cap_unk, &ett_remoting_content };
 
     proto_remoting = proto_register_protocol("JBoss Remoting", "Remoting", "remoting");
     proto_register_field_array(proto_remoting, hf, array_length(hf));
