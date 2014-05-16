@@ -115,6 +115,10 @@ static void dissect_remoting_msg(tvbuff_t *tvb, packet_info *pinfo, proto_tree *
                 switch (pid) {
                     case 0: {
                         proto_tree_add_item(params_tree, hf_remoting_grt_server, tvb, p, plen, ENC_UTF_8);
+                        char text[plen + 1];
+                        tvb_memcpy(tvb, text, p, plen);
+                        text[plen] = 0;
+                        col_append_fstr(pinfo->cinfo, COL_INFO, " (\"%s\")", text);
                         break;
                     }
                     default: {
