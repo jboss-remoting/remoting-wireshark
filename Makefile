@@ -6,7 +6,8 @@ GLIB_INCLUDE=/usr/include/glib-2.0
 WIRESHARK_INCLUDE=/usr/include/wireshark
 GLIBCONFIG_INCLUDE=/usr/lib64/glib-2.0/include
 
-INSTALL=/usr/lib64/wireshark/plugins/1.6.10
+WS_VERSION=$(shell wireshark --version | head -n 1 | egrep -o '[0-9.]+')
+INSTALL=/usr/lib64/wireshark/plugins/$(WS_VERSION)
 
 #OPT=-O2
 CFLAGS=$(OPT) -g -std=gnu99 -fPIC -D_GNU_SOURCE -Wall -Wno-parentheses -Wno-unused-function -DWITH_TRACE -I$(WIRESHARK_INCLUDE) -I$(GLIB_INCLUDE) -I$(GLIBCONFIG_INCLUDE)
