@@ -79,6 +79,7 @@ static int hf_remoting_cap_unk_cont = -1;
 static int ht_remoting_auth_mech = -1;
 
 static int hf_remoting_content = -1;
+static int hf_remoting_content_len = -1;
 static int hf_remoting_content_data = -1;
 
 static gint ett_remoting = -1;
@@ -190,9 +191,10 @@ static void dissect_remoting_msg(tvbuff_t *tvb, packet_info *pinfo, proto_tree *
             guint rem = tvb_length(tvb) - p;
             if (rem > 0) {
                 col_append_fstr(pinfo->cinfo, COL_INFO, " (len=%d)", rem);
-                proto_item *cont_item = proto_tree_add_item(remoting_tree, hf_remoting_content, tvb, p, tvb_length(tvb) - p, ENC_BIG_ENDIAN);
+                proto_item *cont_item = proto_tree_add_item(remoting_tree, hf_remoting_content, tvb, p, rem, ENC_BIG_ENDIAN);
                 proto_tree *cont_tree = proto_item_add_subtree(cont_item, ett_remoting_content);
-                proto_tree_add_item(cont_tree, hf_remoting_content_data, tvb, p, tvb_length(tvb) - p, ENC_BIG_ENDIAN);
+                proto_tree_add_item(cont_tree, hf_remoting_content_data, tvb, p, rem, ENC_BIG_ENDIAN);
+                proto_tree_add_uint(cont_tree, hf_remoting_content_len, tvb, p, rem, rem);
             } else {
                 col_append_str(pinfo->cinfo, COL_INFO, " (empty)");
             }
@@ -260,6 +262,7 @@ static void dissect_remoting_msg(tvbuff_t *tvb, packet_info *pinfo, proto_tree *
                     if (rem > 0) {
                         proto_item *cont_item = proto_tree_add_item(remoting_tree, hf_remoting_content, tvb, 12, rem, ENC_BIG_ENDIAN);
                         proto_tree *cont_tree = proto_item_add_subtree(cont_item, ett_remoting_content);
+                        proto_tree_add_uint(cont_tree, hf_remoting_content_len, tvb, 12, rem, rem);
                         proto_tree_add_item(cont_tree, hf_remoting_content_data, tvb, 12, rem, ENC_BIG_ENDIAN);
                         col_append_fstr(pinfo->cinfo, COL_INFO, " (len=%d)", rem);
                     } else {
@@ -327,7 +330,7 @@ void plugin_register(void) {
         { &ht_remoting_auth_mech, { "SASL Mechanism", "remoting.mech", FT_STRING, BASE_NONE, 0, 0x0, 0, HFILL }},
 
         { &hf_remoting_content,      { "Content", "remoting.cont",      FT_NONE,   0,         0, 0x0, 0, HFILL }},
-        { &hf_remoting_content_len,  { "Length",  "remoting.cont.len",  FT_UINT32, BASE_NONE, 0, 0x0, 0, HFILL }},
+        { &hf_remoting_content_len,  { "Length",  "remoting.cont.len",  FT_UINT32, BASE_DEC,  0, 0x0, 0, HFILL }},
         { &hf_remoting_content_data, { "Data",    "remoting.cont.data", FT_BYTES,  BASE_NONE, 0, 0x0, 0, HFILL }},
     };
     // protocol subtree
