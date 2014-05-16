@@ -71,6 +71,8 @@ static int hf_remoting_cap_starttls = -1;
 static int hf_remoting_cap_endpoint_name = -1;
 static int hf_remoting_cap_msgclose = -1;
 static int hf_remoting_cap_vstr = -1;
+static int hf_remoting_cap_chan_in = -1;
+static int hf_remoting_cap_chan_out = -1;
 static int hf_remoting_cap_unk = -1;
 static int hf_remoting_cap_unk_cont = -1;
 
@@ -148,6 +150,14 @@ static void dissect_remoting_msg(tvbuff_t *tvb, packet_info *pinfo, proto_tree *
                     }
                     case 5: {
                         proto_tree_add_item(params_tree, hf_remoting_cap_vstr, tvb, p, plen, ENC_UTF_8);
+                        break;
+                    }
+                    case 6: {
+                        proto_tree_add_item(params_tree, hf_remoting_cap_chan_in, tvb, p, plen, ENC_BIG_ENDIAN);
+                        break;
+                    }
+                    case 7: {
+                        proto_tree_add_item(params_tree, hf_remoting_cap_chan_out, tvb, p, plen, ENC_BIG_ENDIAN);
                         break;
                     }
                     default: {
@@ -270,6 +280,8 @@ void plugin_register(void) {
         { &hf_remoting_cap_endpoint_name, { "Endpoint Name", "remoting.cap.endpoint", FT_STRING, BASE_NONE,  0,                  0x0, 0, HFILL }},
         { &hf_remoting_cap_msgclose, { "Supports Msg Close Protocol", "remoting.cap.msgclose", FT_NONE, 0,  0,                  0x0, 0, HFILL }},
         { &hf_remoting_cap_vstr, { "Impl Version", "remoting.cap.vstr", FT_STRING, BASE_NONE,  0,                  0x0, 0, HFILL }},
+        { &hf_remoting_cap_chan_in,  { "Inbound Channel Limit", "remoting.cap.chanin", FT_UINT16, BASE_HEX_DEC, 0,       0x0, 0, HFILL }},
+        { &hf_remoting_cap_chan_out,  { "Outbound Channel Limit", "remoting.cap.chanout", FT_UINT16, BASE_HEX_DEC, 0,       0x0, 0, HFILL }},
         { &hf_remoting_cap_unk,     { "Unknown", "remoting.cap.unk", FT_UINT8, BASE_HEX, 0, 0x0, 0, HFILL }},
         { &hf_remoting_cap_unk_cont,{ "Content", "remoting.cap.unk.cont", FT_BYTES, BASE_NONE, 0, 0x0, 0, HFILL }},
         
