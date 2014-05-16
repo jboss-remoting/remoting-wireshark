@@ -76,6 +76,8 @@ static int hf_remoting_cap_chan_out = -1;
 static int hf_remoting_cap_unk = -1;
 static int hf_remoting_cap_unk_cont = -1;
 
+static int ht_remoting_auth_mech = -1;
+
 static int hf_remoting_content = -1;
 static int hf_remoting_content_data = -1;
 
@@ -99,6 +101,7 @@ static void dissect_remoting_msg(tvbuff_t *tvb, packet_info *pinfo, proto_tree *
         proto_tree_add_item(remoting_tree, hf_remoting_pkt_length, tvb, 0, 4, ENC_BIG_ENDIAN);
         proto_tree_add_item(remoting_tree, hf_remoting_pkt_type, tvb, 4, 1, ENC_BIG_ENDIAN);
         uint8_t pkt_type = (uint8_t) tvb_get_guint8(tvb, 4);
+        col_add_fstr(pinfo->cinfo, COL_INFO, "%s", val_to_str(pkt_type, msg_type_names, "Unknown (0x%02x)"));
         if (pkt_type == 0x00) {
             // greeting
             proto_item *params_item = proto_tree_add_item(remoting_tree, hf_remoting_grt, tvb, 5, -1, ENC_NA);
@@ -174,9 +177,25 @@ static void dissect_remoting_msg(tvbuff_t *tvb, packet_info *pinfo, proto_tree *
                 p += plen;
             }
         } else if (pkt_type >= 0x02 && pkt_type <= 0x05) {
-            proto_item *cont_item = proto_tree_add_item(remoting_tree, hf_remoting_content, tvb, 1, tvb_length(tvb) - 1, ENC_BIG_ENDIAN);
-            proto_tree *cont_tree = proto_item_add_subtree(cont_item, ett_remoting_content);
-            proto_tree_add_item(cont_tree, hf_remoting_content_data, tvb, 1, tvb_length(tvb) - 1, ENC_BIG_ENDIAN);
+            gint p = 5;
+            if (pkt_type == 0x02) {
+                guint plen = tvb_get_guint8(tvb, p++);
+                char text[plen + 1];
+                tvb_memcpy(tvb, text, p, plen);
+                text[plen] = 0;
+                proto_tree_add_item(remoting_tree, ht_remoting_auth_mech, tvb, p, plen, ENC_UTF_8);
+                p += plen;
+                col_append_fstr(pinfo->cinfo, COL_INFO, " (\"%s\")", text);
+            }
+            guint rem = tvb_length(tvb) - p;
+            if (rem > 0) {
+                col_append_fstr(pinfo->cinfo, COL_INFO, " (len=%d)", rem);
+                proto_item *cont_item = proto_tree_add_item(remoting_tree, hf_remoting_content, tvb, p, tvb_length(tvb) - p, ENC_BIG_ENDIAN);
+                proto_tree *cont_tree = proto_item_add_subtree(cont_item, ett_remoting_content);
+                proto_tree_add_item(cont_tree, hf_remoting_content_data, tvb, p, tvb_length(tvb) - p, ENC_BIG_ENDIAN);
+            } else {
+                col_append_str(pinfo->cinfo, COL_INFO, " (empty)");
+            }
         } else if (pkt_type >= 0x10 && pkt_type <= 0x3F) {
             proto_tree_add_item(remoting_tree, hf_remoting_chanid, tvb, 5, 4, ENC_BIG_ENDIAN);
             if (pkt_type == 0x10 || pkt_type == 0x11) {
@@ -190,6 +209,10 @@ static void dissect_remoting_msg(tvbuff_t *tvb, packet_info *pinfo, proto_tree *
                     plen = tvb_get_guint8(tvb, p++);
                     switch (pid) {
                         case 1: {
+                            char text[plen + 1];
+                            tvb_memcpy(tvb, text, p, plen);
+                            text[plen] = 0;
+                            col_append_fstr(pinfo->cinfo, COL_INFO, " (\"%s\")", text);
                             proto_tree_add_item(params_tree, hf_remoting_svcparam_name, tvb, p, plen, ENC_UTF_8);
                             break;
                         }
@@ -233,9 +256,15 @@ static void dissect_remoting_msg(tvbuff_t *tvb, packet_info *pinfo, proto_tree *
                     proto_tree_add_item(remoting_tree, hf_remoting_msg_flag_eof, tvb, 11, 1, ENC_BIG_ENDIAN);
                     proto_tree_add_item(remoting_tree, hf_remoting_msg_flag_new, tvb, 11, 1, ENC_BIG_ENDIAN);
                     proto_tree_add_item(remoting_tree, hf_remoting_msg_flag_cancel, tvb, 11, 1, ENC_BIG_ENDIAN);
-                    proto_item *cont_item = proto_tree_add_item(remoting_tree, hf_remoting_content, tvb, 1, tvb_length(tvb) - 1, ENC_BIG_ENDIAN);
-                    proto_tree *cont_tree = proto_item_add_subtree(cont_item, ett_remoting_content);
-                    proto_tree_add_item(cont_tree, hf_remoting_content_data, tvb, 1, tvb_length(tvb) - 1, ENC_BIG_ENDIAN);
+                    guint rem = tvb_length(tvb) - 12;
+                    if (rem > 0) {
+                        proto_item *cont_item = proto_tree_add_item(remoting_tree, hf_remoting_content, tvb, 12, rem, ENC_BIG_ENDIAN);
+                        proto_tree *cont_tree = proto_item_add_subtree(cont_item, ett_remoting_content);
+                        proto_tree_add_item(cont_tree, hf_remoting_content_data, tvb, 12, rem, ENC_BIG_ENDIAN);
+                        col_append_fstr(pinfo->cinfo, COL_INFO, " (len=%d)", rem);
+                    } else {
+                        col_append_str(pinfo->cinfo, COL_INFO, " (empty)");
+                    }
                 } else if (pkt_type == 0x31) {
                     proto_tree_add_item(remoting_tree, hf_remoting_msg_window, tvb, 11, 4, ENC_BIG_ENDIAN);
                 }
@@ -295,8 +324,11 @@ void plugin_register(void) {
         { &hf_remoting_cap_unk,           { "Unknown",                     "remoting.cap.unk",      FT_UINT8,  BASE_HEX,     0, 0x0, 0, HFILL }},
         { &hf_remoting_cap_unk_cont,      { "Content",                     "remoting.cap.unk.cont", FT_BYTES,  BASE_NONE,    0, 0x0, 0, HFILL }},
 
-        { &hf_remoting_content,      { "Content", "remoting.cont",      FT_NONE,  0,         0, 0x0, 0, HFILL }},
-        { &hf_remoting_content_data, { "Data",    "remoting.cont.data", FT_BYTES, BASE_NONE, 0, 0x0, 0, HFILL }},
+        { &ht_remoting_auth_mech, { "SASL Mechanism", "remoting.mech", FT_STRING, BASE_NONE, 0, 0x0, 0, HFILL }},
+
+        { &hf_remoting_content,      { "Content", "remoting.cont",      FT_NONE,   0,         0, 0x0, 0, HFILL }},
+        { &hf_remoting_content_len,  { "Length",  "remoting.cont.len",  FT_UINT32, BASE_NONE, 0, 0x0, 0, HFILL }},
+        { &hf_remoting_content_data, { "Data",    "remoting.cont.data", FT_BYTES,  BASE_NONE, 0, 0x0, 0, HFILL }},
     };
     // protocol subtree
     static gint *ett[] = { &ett_remoting, &ett_svcparam, &ett_svcparam_unk, &ett_grt, &ett_grt_unk, &ett_cap, &ett_cap_unk, &ett_remoting_content };
