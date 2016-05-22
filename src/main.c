@@ -91,7 +91,7 @@ static gint ett_cap = -1;
 static gint ett_cap_unk = -1;
 static gint ett_remoting_content = -1;
 
-static void dissect_remoting_msg(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree) {
+static void dissect_remoting_msg(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_) {
     col_set_str(pinfo->cinfo, COL_PROTOCOL, "Remoting");
     // clear info column
     col_clear(pinfo->cinfo, COL_INFO);
@@ -280,12 +280,12 @@ static void dissect_remoting_msg(tvbuff_t *tvb, packet_info *pinfo, proto_tree *
     }
 }
 
-static guint get_remoting_message_len(packet_info *pinfo, tvbuff_t *tvb, int offset) {
+static guint get_remoting_message_len(packet_info *pinfo, tvbuff_t *tvb, int offset, void *data _U_) {
     return (guint) tvb_get_ntohl(tvb, offset) + 4;
 }
 
-static void dissect_remoting(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree) {
-    tcp_dissect_pdus(tvb, pinfo, tree, TRUE, 4, get_remoting_message_len, dissect_remoting_msg);
+static void dissect_remoting(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data) {
+    tcp_dissect_pdus(tvb, pinfo, tree, TRUE, 4, get_remoting_message_len, dissect_remoting_msg, data);
 }
 
 void plugin_register(void) {
