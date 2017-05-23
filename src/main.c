@@ -108,7 +108,7 @@ static void dissect_remoting_msg(tvbuff_t *tvb, packet_info *pinfo, proto_tree *
             proto_item *params_item = proto_tree_add_item(remoting_tree, hf_remoting_grt, tvb, 5, -1, ENC_NA);
             proto_tree *params_tree = proto_item_add_subtree(params_item, ett_grt);
             gint p = 5;
-            while (p < tvb_length(tvb)) {
+            while (p < tvb_captured_length(tvb)) {
                 guint pid, plen;
                 pid = tvb_get_guint8(tvb, p++);
                 plen = tvb_get_guint8(tvb, p++);
@@ -135,7 +135,7 @@ static void dissect_remoting_msg(tvbuff_t *tvb, packet_info *pinfo, proto_tree *
             proto_item *params_item = proto_tree_add_item(remoting_tree, hf_remoting_cap, tvb, 5, -1, ENC_NA);
             proto_tree *params_tree = proto_item_add_subtree(params_item, ett_cap);
             gint p = 5;
-            while (p < tvb_length(tvb)) {
+            while (p < tvb_captured_length(tvb)) {
                 guint pid, plen;
                 pid = tvb_get_guint8(tvb, p++);
                 plen = tvb_get_guint8(tvb, p++);
@@ -192,7 +192,7 @@ static void dissect_remoting_msg(tvbuff_t *tvb, packet_info *pinfo, proto_tree *
                 p += plen;
                 col_append_fstr(pinfo->cinfo, COL_INFO, " (\"%s\")", text);
             }
-            guint rem = tvb_length(tvb) - p;
+            guint rem = tvb_captured_length(tvb) - p;
             if (rem > 0) {
                 col_append_fstr(pinfo->cinfo, COL_INFO, " (len=%d)", rem);
                 proto_item *cont_item = proto_tree_add_item(remoting_tree, hf_remoting_content, tvb, p, rem, ENC_BIG_ENDIAN);
@@ -262,7 +262,7 @@ static void dissect_remoting_msg(tvbuff_t *tvb, packet_info *pinfo, proto_tree *
                     proto_tree_add_item(remoting_tree, hf_remoting_msg_flag_eof, tvb, 11, 1, ENC_BIG_ENDIAN);
                     proto_tree_add_item(remoting_tree, hf_remoting_msg_flag_new, tvb, 11, 1, ENC_BIG_ENDIAN);
                     proto_tree_add_item(remoting_tree, hf_remoting_msg_flag_cancel, tvb, 11, 1, ENC_BIG_ENDIAN);
-                    guint rem = tvb_length(tvb) - 12;
+                    guint rem = tvb_captured_length(tvb) - 12;
                     if (rem > 0) {
                         proto_item *cont_item = proto_tree_add_item(remoting_tree, hf_remoting_content, tvb, 12, rem, ENC_BIG_ENDIAN);
                         proto_tree *cont_tree = proto_item_add_subtree(cont_item, ett_remoting_content);
